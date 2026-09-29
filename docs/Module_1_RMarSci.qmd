@@ -1,0 +1,120 @@
+---
+title: "Module 1 R for Marine Science"
+author: "Rowwyn Lontayao"
+format: html
+editor: visual
+---
+
+```{r}
+gc()
+rm(list = ls())
+```
+```{r}
+library(tidyverse)
+library(readxl)
+library(here)
+```
+
+```{r}
+benthic_cover <- read_csv(
+  here::here("data/workshop1/reef_cover_log.csv")
+)
+
+acoustic_stream <- read_tsv(
+  here::here("data/workshop1/acoustic_telemetry_stream.txt")
+)
+
+fisheries_annual <- read_excel(
+  here::here("data/workshop1/fish_catch_data.xlsx"),
+  sheet = "Commercial_2026"
+)
+```
+
+```{r}
+mangrove_data <- read_csv(
+  here::here("data/workshop1/mangrove_survey_raw.csv"),
+  skip = 5,
+  na = c(".", "NA", "9999", "ND", "blank")
+)
+```
+```{r}
+benthic_cover_df <- as.data.frame(benthic_cover)
+
+print(benthic_cover_df)
+print(benthic_cover)
+```
+```{r}
+# Assign variable values
+site_name <- "Heron_Island"
+transect_depth_m <- 12.5
+bleaching_present <- TRUE
+
+# Check using function class()
+class(site_name)
+class(transect_depth_m)
+class(bleaching_present)
+
+# Check using function str()
+str(site_name)
+str(transect_depth_m)
+str(bleaching_present)
+```
+```{r}
+# Tracking the age of an old-growth Porites coral colony
+years_old <- 25.765
+
+# Round to 2 decimal places
+round(years_old, 2)
+
+# Round to 1 decimal place for the field report
+rounded_age <- round(years_old, 1)
+
+# Combine text and data
+paste("Average colony age is", rounded_age, "years old")
+```
+```{r}
+# Numeric vector
+fish_lengths <- c(124, 152, 98, 221, 146)
+
+# Character vector
+coral_spp <- c("Porites", "Acropora", "Montastrea")
+
+# Check their types
+class(fish_lengths)
+class(coral_spp)
+
+# Try mixing different data types
+notes <- c("Acropora", 27.5, TRUE)
+
+notes
+class(notes)
+```
+```{r}
+# Create a list containing different data types
+notes <- list("Acropora", 27.5, TRUE)
+
+notes
+
+# Access the first element
+notes[[1]]
+```
+```{r}
+my_dataframe <- data.frame(
+  no = c(1, 2, 3),
+  species = c("Plectropomus", "Scarus", "Pomacentrus"),
+  present = c(TRUE, FALSE, TRUE)
+)
+
+my_dataframe
+str(my_dataframe)
+my_dataframe$no <- as.factor(my_dataframe$no)
+
+str(my_dataframe)
+```
+```{r}
+fish_weights <- c(2.4, 3.1, NA, 2.8)
+
+fish_weights
+is.na(fish_weights)
+```
+
