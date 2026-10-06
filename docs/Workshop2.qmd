@@ -2,4 +2,264 @@
 title: "Workshop2"
 format: html
 ---
+#Load Packages
+```{r}
+library(tidyverse)
+```
+# Tidying dataset
+```{r}
+# Compute rate per 10,000
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+
+table1 %>% 
+  count(year, wt = cases)
+
+ggplot(table1, aes(year, cases)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+
+
+```
+#Billboard songs
+```{r}
+billboard %>% 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week", 
+    values_to = "rank",
+    values_drop_na = TRUE
+  )
+```
+#Selfcheck1
+```{r}
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+
+df%>%
+  pivot_longer(
+    cols = starts_with("bp"), 
+    names_to = "bloodpressure", 
+    values_to = "reading",
+    values_drop_na = TRUE
+  )
+```
+#Pivot wider
+```{r}
+table2 %>%
+   pivot_wider(
+    names_from = type,
+    values_from = count,
+   )
+  
+```
+#Palmerpenguin trial
+```{r}
+library(palmerpenguins)
+
+penguins_long <- penguins |>
+  pivot_longer(
+    cols = c(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g),
+    names_to = "measurement_type",
+    values_to = "value"
+  )
+
+
+penguins_long |>
+  drop_na(value) |>
+  ggplot(aes(x = value, fill = species)) +
+  geom_histogram(bins = 30, alpha = 0.7, colour = "black") +
+  facet_wrap(~ measurement_type, scales = "free_x") +
+  theme_minimal() +
+  labs(
+    title = "Morphometric distributions across penguin species",
+    x = "Measurement value",
+    y = "Frequency"
+  )
+
+penguins_long
+```
+
+```{r}
+mass_summary <- penguins |>
+  drop_na(body_mass_g) |>
+  group_by(species, island) |>
+  summarise(mean_mass = mean(body_mass_g))
+
+head(mass_summary)
+
+```
+```{r}
+mass_matrix <- mass_summary |>
+  pivot_wider(
+    names_from = island,
+    values_from = mean_mass
+  )
+
+head(mass_matrix)
+```
+
+#cleaning penguins 
+```{r}
+island_metadata <- tibble(
+  island_name = c(" biscoe", "Dream ", "Torgersen"),
+  station_install = c("15/01/2003", "22-03-2004", "05/11/2001"),
+  latitude = c(-64.81, -64.73, -64.76)
+)
+
+print(island_metadata)
+
+```
+
+```{r}
+
+clean_metadata <- island_metadata %>%
+  mutate(
+    island_name = str_trim(island_name),
+    island_name = str_to_title(island_name),
+    station_install = dmy(station_install)
+  )
+print(clean_metadata)
+```
+```{r}
+penguins_spatial <- penguins %>%
+  left_join(
+    clean_metadata,
+    by = join_by(island == island_name)
+  )
+view(penguins_spatial)
+
+```
+
+```{r}
+penguin_publication <- penguins |>
+  drop_na(body_mass_g) |>
+  group_by(species, island) |>
+  summarise(
+    max_mass = max(body_mass_g),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = island,
+    values_from = max_mass
+  )
+print(penguin_publication)
+```
+#Estuary exercise
+```{r}
+library(here)
+
+estuary_sonde <- read_csv(here("data", "workshop2", "estuary_sonde_data.csv"))
+
+estuary_meta <- read_csv(here("data", "workshop2", "estuary_metadata.csv"))
+
+estuary_species <- read_csv(here("data", "workshop2", "species_dictionary.csv"))
+```
+```{r}
+library(readxl)
+lower_ross <- read_excel(
+  here("data", "workshop2", "estuary_catch_log.xlsx"),
+  sheet = "Lower_ross"
+)
+
+mid_ross <- read_excel(
+  here("data", "workshop2", "estuary_catch_log.xlsx"),
+  sheet = "Mid_Ross "
+)
+
+mouth_ross <- read_excel(
+  here("data", "workshop2", "estuary_catch_log.xlsx"),
+  sheet = "ROSS MOUTH"
+)
+
+upper_ross <- read_excel(
+  here("data", "workshop2", "estuary_catch_log.xlsx"),
+  sheet = "Upper Ross"
+)
+
+```
+#Combine Sheets
+```{r}
+estuary_catch_log <- bind_rows(
+  lower_ross,
+  mid_ross,
+  mouth_ross,
+  upper_ross
+)
+glimpse(estuary_catch_log)
+
+```
+#tidying catch log
+```{r}
+estuary_catch_log_tidy <- estuary_catch_log %>%
+  mutate(
+    species = str_trim(species),
+    species = str_to_lower(species),
+    species = str_replace_all(species, " ", "_"),
+    
+    site = str_trim(site),
+    site = str_to_lower(site),
+    site = str_replace_all(site, " ", "_")
+  )
+glimpse(estuary_catch_log_tidy)
+
+```
+#tidying sonde
+```{r}
+sonde_daily <- estuary_sonde %>%
+  mutate(
+    timestamp = dmy_hm(timestamp),
+    turbidity = na_if(turbidity, -999)
+  ) %>%
+  mutate(
+    date = floor_date(timestamp, unit = "day")
+  ) %>%
+  group_by(site, date) %>%
+  summarise(
+  mean_temp = mean(temperature, na.rm = TRUE),
+  mean_salinity = mean(salinity, na.rm = TRUE),
+  .groups = "drop"
+)
+  
+```
+#Scientific names
+```{r}
+estuary_species_catch_log <- estuary_catch_log_tidy %>%
+  left_join(
+    estuary_species,
+    by = join_by(species == common_name)
+  )
+glimpse(estuary_species_catch_log)
+sum(is.na(estuary_species_catch_log$scientific_name))
+
+```
+#Grand Join
+```{r}
+
+estuary_meta_tidy <- estuary_meta %>%
+  mutate(
+    site_name = str_trim(site_name),
+    site_name = str_to_lower(site_name),
+    site_name = str_replace_all(site_name, " ", "_")
+  )
+
+estuary_master <- estuary_species_catch_log %>%
+  left_join(
+    estuary_meta_tidy,
+    by = join_by(site == site_name)
+  )
+estuary_master <- estuary_master %>%
+  left_join(
+    sonde_daily,
+    by = join_by(site, date)
+  )
+glimpse(estuary_master)
+
+```
+
+
 
