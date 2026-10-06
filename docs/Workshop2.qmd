@@ -204,6 +204,10 @@ estuary_catch_log_tidy <- estuary_catch_log %>%
     site = str_trim(site),
     site = str_to_lower(site),
     site = str_replace_all(site, " ", "_")
+  )%>%
+    tidyr::complete(species, site, date) %>%
+  mutate(
+    count = coalesce(count, 0)
   )
 glimpse(estuary_catch_log_tidy)
 
@@ -257,9 +261,79 @@ estuary_master <- estuary_master %>%
     sonde_daily,
     by = join_by(site, date)
   )
-glimpse(estuary_master)
+view(estuary_master)
 
 ```
 
+#check
+```{r}
+colSums(is.na(estuary_master))
+#phase 3 was added in estuary_catch_log to make NA disappear
+```
 
+#Phase 4
+```{r}
+estuary_summary <- estuary_master %>%
+  group_by(species, scientific_name, zone) %>%
+  summarise(
+    mean_catch = mean(count),
+    se_catch = sd(count) / sqrt(n()),
+    salinity_mean = mean(mean_salinity),
+    salinity_se = sd(mean_salinity) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    zone = factor(
+      zone,
+      levels = c("Upstream", "Middle", "Downstream", "Marine")
+    )
+  )
+
+estuary_summary <- estuary_summary %>%
+  mutate(
+    facet_label = paste0(
+      str_to_title(str_replace_all(species, "_", " ")),
+      "<br><i>",
+      scientific_name,
+      "</i>"
+    )
+  )
+```
+
+#Phase 5
+```{r}
+library(ggtext)
+ggplot(
+  estuary_summary,
+  aes(
+    x = salinity_mean,
+    y = mean_catch,
+    group = scientific_name,
+    color = scientific_name
+  )
+) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(
+      ymin = mean_catch - se_catch,
+      ymax = mean_catch + se_catch
+    ),
+    width = 0.15
+  ) +
+facet_wrap(
+  ~ facet_label,
+  ncol = 2
+)+
+  labs(
+    x = "Mean salinity",
+    y = "Mean Catch ± SE"
+  ) +
+  theme_minimal() +
+theme(
+  legend.position = "none",
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  strip.text = ggtext::element_markdown(size = 11)
+)
+```
 
