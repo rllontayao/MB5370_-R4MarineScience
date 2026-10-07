@@ -321,7 +321,7 @@ ggplot(
     alpha = 1.0,
     size = 0.75,
      color = "grey50",
-    position = position_jitter(width = 0.1, height = 0)
+    position = position_jitter(width = 0.1)
   ) +
   geom_line() +
   geom_point(size = 3) +
