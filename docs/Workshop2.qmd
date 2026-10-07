@@ -306,12 +306,23 @@ library(ggtext)
 ggplot(
   estuary_summary,
   aes(
-    x = salinity_mean,
+    x = zone,
     y = mean_catch,
     group = scientific_name,
     color = scientific_name
   )
 ) +
+  geom_point(
+    data = estuary_master,
+    aes(
+      x = zone,
+      y = count,
+    ),
+    alpha = 1.0,
+    size = 0.75,
+     color = "grey50",
+    position = position_jitter(width = 0.1, height = 0)
+  ) +
   geom_line() +
   geom_point(size = 3) +
   geom_errorbar(
@@ -319,21 +330,32 @@ ggplot(
       ymin = mean_catch - se_catch,
       ymax = mean_catch + se_catch
     ),
-    width = 0.15
+    width = 0.15,
+    color = "black"
   ) +
-facet_wrap(
-  ~ facet_label,
-  ncol = 2
-)+
+  facet_wrap(
+    ~ facet_label,
+    ncol = 2
+  ) +
   labs(
-    x = "Mean salinity",
+    x = "Zone (Salinity)",
     y = "Mean Catch ± SE"
   ) +
   theme_minimal() +
-theme(
-  legend.position = "none",
-  axis.text.x = element_text(angle = 45, hjust = 1),
-  strip.text = ggtext::element_markdown(size = 11)
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = ggtext::element_markdown(size = 11)
+  )
+```
+#Save Plot
+```{r}
+ggsave(
+  filename = here("figures", "estuary_catch_plot.png"),
+  width = 8,
+  height = 6,
+  dpi = 300
 )
 ```
+
 
