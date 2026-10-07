@@ -1,8 +1,175 @@
 ---
 title: "Workshop3"
 author: "Rowwyn Lontayao"
-format: html
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
-## 
+#Load packages
+```{r}
+library(tidyverse)
+```
+
+## Data Source
+
+The original figure and underlying dataset were obtained from the statOmics fish tank exercise by Lieven Clement and Jeroen Gilis at Ghent University. The experiment investigated the effect of three diet treatments on fish weight gain using 12 tanks, with six fish measured within each tank. The tank was the experimental unit, while individual fish were the observational units.
+
+The original figure and accompanying code are available from the statOmics exercise:
+
+https://statomics.github.io/biostatistics21/fishtank_sol.html
+
+The underlying dataset was accessed from the associated GitHub repository:
+
+https://raw.githubusercontent.com/statOmics/PSLS21/data/fishTank.txt
+
+##Fish tank diet treatment message: Fish weight gain differs substantially among diet treatments, with fish receiving Diet 3 generally showing the greatest weight gain, followed by Diet 2, while Diet 1 shows the lowest weight gain. The figure also shows variation among tanks and individual fish within each diet treatment.
+
+##Possible flaw The x-axis emphasizes individual tank numbers rather than the diet treatments, making the main comparison among diets less immediately apparent. Readers must rely on the colour legend to determine which tanks belong to each diet treatment.
+#The figure contains several overlapping visual elements, including boxplots, individual observations and tank means, which makes the plot visually busy. In addition, the black diamonds representing mean weight gain are not clearly identified within the figure, making their meaning difficult to interpret without referring to the accompanying text or code.
+
+## Exercise 1: Plot Deconstruction.
+
+###Original figure
+
+```{r}
+#| echo: false
+
+knitr::include_graphics(
+  here::here("figures", "graphdeconstruction_Wkshp3.png")
+)
+```
+
+###Import data
+```{r}
+raw_fish <- read.table(
+  "https://raw.githubusercontent.com/statOmics/PSLS21/data/fishTank.txt",
+  header = TRUE
+)
+glimpse(raw_fish)
+```
+
+#tidying data
+```{r}
+fish_tidy <- raw_fish %>%
+  mutate(
+    Diet = factor(Diet),
+    Tank = factor(Tank)
+  )
+glimpse(fish_tidy)
+```
+#reprdocuing the plot
+```{r}
+ggplot(data = fish_tidy, aes(x = Tank, y = WtGain, fill = Diet)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Diet), width = 0.1, alpha = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "black") +
+  labs(
+    title = "Fish Weight Gain by Diet Treatment",
+    x = "Tank Number",
+    y = "Weight Gain (g)",
+    fill = "Diet Treatment",
+    color = "Diet Treatment"
+  ) +
+  theme_minimal()
+```
+
+#making tank summary
+```{r}
+tank_summary <- raw_fish %>%
+  group_by(Diet, Tank) %>%
+  summarise(
+    mean_wtgain = mean(WtGain),
+    .groups = "drop"
+  )
+glimpse(tank_summary)
+tank_summary <- tank_summary %>%
+  mutate(
+    Diet = factor(Diet),
+    Tank = factor(Tank)
+  )
+```
+
+#Improving the plot
+```{r}
+ggplot(
+  data = fish_tidy,
+  aes(
+    x = Diet,
+    y = WtGain
+  )
+) +
+
+  # Distribution of individual fish weight gain
+  geom_boxplot(
+    aes(color = Diet),
+    fill = NA
+  ) +
+
+  # Mean weight gain of each replicate tank
+  geom_point(
+    data = tank_summary,
+    aes(
+      x = Diet,
+      y = mean_wtgain,
+      color = Diet
+    ),
+    position = position_jitter(
+      width = 0.15,
+      height = 0
+    ),
+    size = 3,
+    alpha = 0.9
+  ) +
+
+  # Overall mean of the replicate tank means for each diet
+  stat_summary(
+    data = tank_summary,
+    aes(
+      x = Diet,
+      y = mean_wtgain,
+      color = Diet
+    ),
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 4,
+    fill = "white"
+  ) +
+
+  # Accessible colour palette
+  scale_color_viridis_d(
+    end = 0.85
+  ) +
+
+  # Figure labels and caption
+  labs(
+    x = "Diet Treatment",
+    y = "Weight Gain (g)",
+    caption = stringr::str_wrap(
+      paste(
+        "Boxplots show the distribution of individual fish weight gain within each diet treatment.",
+        "Coloured points represent mean weight gain for each replicate tank (n = 4 tanks per diet),",
+        "and open diamonds represent the overall mean of the replicate tank means for each diet treatment."
+      ),
+      width = 100
+    )
+  ) +
+
+  # Figure appearance
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.caption = element_text(
+      hjust = 0
+    )
+  )
+```
+### Reconstruction
+
+The reconstructed figure focuses the x-axis on diet treatment rather than individual tank number, making the main comparison among the three diet treatments immediately apparent. This removes the need for readers to use a colour legend to determine which tanks belong to each treatment.
+
+To retain information about replication, the mean weight gain of each tank is displayed as a coloured point, with four replicate tanks shown for each diet treatment. Boxplots provide additional context by showing the distribution of individual fish weight gain within each treatment, while open diamonds indicate the overall mean of the replicate tank means.
+
+The figure also uses a viridis colour palette to improve colour accessibility and a minimal theme to reduce visual clutter. Together, these changes emphasize the differences in weight gain among diet treatments while retaining information about variation among replicate tanks and individual fish.
