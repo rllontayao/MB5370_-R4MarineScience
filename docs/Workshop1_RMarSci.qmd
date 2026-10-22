@@ -1,5 +1,5 @@
 ---
-title: "Module 1 R for Marine Science"
+title: "Workshop 1: R for Marine Science part 1"
 author: "Rowwyn Lontayao"
 format: html
 editor: visual
