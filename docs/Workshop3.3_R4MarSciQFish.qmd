@@ -1,0 +1,170 @@
+---
+title: "Commercial Barramundi Catch Trends in Queensland (2007–2025)"
+subtitle: "Workshop 3 – Queensland Fisheries Data Discovery Challenge"
+author: "Rowwyn Lontayao"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show Code"
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: visual
+---
+
+## QFish Data Wrangling 
+
+### Load the Excel data
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+library(readxl)
+library(dplyr)
+library(ggplot2)
+fisheries <- read_excel(
+  "../data/workshop3/commercial-fishing-annual-species.xlsx",
+  col_types = c("text", "text", "text", "text", "text",
+                "text", "text", "numeric", "numeric",
+                "numeric", "numeric")
+)
+
+fisheries$Year <- as.numeric(
+  ifelse(fisheries$YearType == "Calendar", fisheries$Year, NA)
+)
+head(fisheries)
+```
+```{r}
+#| output: false
+glimpse(fisheries)
+```
+
+
+## Research question: How have commercial barramundi catches changed over time between Queensland's East Coast and Gulf of Carpentaria?
+
+```{r}
+#| output: false
+# Keep calendar-year records only
+fisheries_calendar <- fisheries |>
+  filter(YearType == "Calendar")
+
+# Select barramundi from the Net fishery in both regions
+barramundi <- fisheries_calendar |>
+  filter(
+    Fishery == "Net",
+    SpeciesCommonName == "Barramundi",
+    Region %in% c("East Coast", "GOC"),
+    Year <= 2025
+  )
+
+# Calculate catch per reported fishing day
+barramundi <- barramundi |>
+  mutate(
+    Catch_per_day = Catch_Kg / Days
+  )
+
+# Check the resulting dataset
+glimpse(barramundi)
+```
+
+
+### Commercial Barramundi Catch (2007–2025)
+```{r}
+ggplot(barramundi,
+       aes(x = Year, y = Catch_T, colour = Region)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Commercial Barramundi Catch in Queensland",
+    subtitle = "East Coast vs Gulf of Carpentaria (2007–2025)",
+    x = "Year",
+    y = "Annual catch (tonnes)",
+    colour = "Region",
+    caption = "Source: Queensland Government fisheries data"
+  ) +
+  theme_minimal()
+```
+
+### Catch per Reported Fishing Day (2007–2025)
+```{r}
+ggplot(barramundi,
+       aes(x = Year, y = Catch_per_day, colour = Region)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Commercial Barramundi Catch per Fishing Day",
+    subtitle = "East Coast vs Gulf of Carpentaria (2007–2025)",
+    x = "Year",
+    y = "Catch per reported fishing day (kg/day)",
+    colour = "Region",
+    caption = "Source: Queensland Government fisheries data"
+  ) +
+  theme_minimal()
+```
+### Reported Fishing Effort (2007–2025)
+```{r}
+ggplot(barramundi,
+       aes(x = Year, y = Days, colour = Region)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Reported Fishing Effort in Queensland Barramundi Net Fisheries",
+    subtitle = "East Coast vs Gulf of Carpentaria (2007–2025)",
+    x = "Year",
+    y = "Reported fishing days",
+    colour = "Region",
+    caption = "Source: Queensland Government fisheries data"
+  ) +
+  theme_minimal()
+```
+## Results and Discussion
+
+### Commercial Barramundi Catch
+
+Commercial barramundi catches differed between Queensland's East Coast and Gulf of Carpentaria (GOC) from 2007 to 2025. The GOC consistently recorded higher catches than the East Coast throughout the study period.
+
+On the East Coast, annual barramundi catch generally declined after reaching approximately 615 tonnes in 2011. In comparison, GOC catches fluctuated considerably, reaching approximately 966 tonnes in 2011 and 827 tonnes in 2023.
+
+### Fishing Effort and Catch per Fishing Day
+
+Reported fishing effort declined substantially in both regions. On the East Coast, fishing effort decreased from 5,025 days in 2007 to 1,203 days in 2025. Similarly, fishing effort in the GOC declined from 8,377 to 2,596 days over the same period.
+
+Despite declining fishing effort, catch per reported fishing day increased in the GOC, particularly after 2020. This indicates that the relationship between total catch and fishing effort is not straightforward.
+
+The East Coast showed a different pattern, with catch per fishing day remaining relatively stable over much of the study period before increasing in recent years.
+
+### Ecological and Fisheries Management Implications
+
+The decline in commercial barramundi catches does not necessarily indicate a decline in wild barramundi populations. Changes in fishing effort, fishing efficiency, regulations, market demand and environmental conditions may influence reported catches.
+
+Aquaculture may also contribute to seafood supply and potentially reduce reliance on wild-caught barramundi. However, this study does not establish a direct relationship between aquaculture production and commercial fishing activity.
+
+### Limitations
+
+This analysis uses aggregated commercial fisheries data rather than direct measurements of barramundi population abundance. Catch per reported fishing day is an unstandardised catch-to-effort ratio and should not be interpreted as a direct indicator of fish abundance.
+
+Differences in fishing practices, reporting methods and management arrangements between regions may also influence the results. Data for 2026 were excluded from the analysis because the reporting year was incomplete at the time of data retrieval. Additionally, the precise definition of reported fishing effort should be considered when interpreting catch-per-day values.
+
+## Conclusion
+
+This analysis examined commercial barramundi catches, reported fishing effort and catch per fishing day in Queensland's East Coast and Gulf of Carpentaria (GOC) between 2007 and 2025.
+
+Overall, commercial barramundi catches and fishing effort generally declined in both regions, although catches fluctuated considerably in the GOC. Despite declining fishing effort, catch per reported fishing day increased substantially in the GOC, particularly in recent years.
+
+These findings highlight the importance of considering fishing effort when interpreting commercial catch trends. However, the observed increase in catch per fishing day does not necessarily indicate an increase in wild barramundi populations. Further research would be needed to understand whether these trends are associated with changes in fishing practices, fisheries management or environmental conditions.
+
+## Data Source and Reference
+
+### Data Source
+
+The dataset used in this analysis was obtained from the Queensland Government Open Data Portal, under *Queensland Fisheries Resource Data and Information*.
+
+The analysis used the **Commercial Fishing Annual Species Summary Data**, focusing on barramundi (*Lates calcarifer*) catches reported from the East Coast and Gulf of Carpentaria between 2007 and 2025.
+
+The dataset includes commercial catch (tonnes and kilograms), reported fishing days, fishing regions and species information. Data were processed and visualised using R, including the `readxl`, `dplyr` and `ggplot2` packages.
+
+### Reference
+
+Queensland Government. (2026). *Queensland Fisheries Resource Data and Information* [Data set]. Queensland Government Open Data Portal. https://www.data.qld.gov.au/dataset/queensland-fisheries-resource-data-and-information

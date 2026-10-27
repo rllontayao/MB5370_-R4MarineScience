@@ -1,6 +1,8 @@
 ---
 title: "Workshop2 R for Marine Science Estuary Data Wrangling"
-format: html
+format:
+  html:
+    embed-resources: true
 ---
 #Load Packages
 ```{r}

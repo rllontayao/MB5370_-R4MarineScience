@@ -1,7 +1,9 @@
 ---
 title: "Workshop 1 R for Marine Science part 2 - Penguin Wrangling"
 author: "Rowwyn Lontayao"
-format: html
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 

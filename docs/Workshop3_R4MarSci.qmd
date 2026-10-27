@@ -1,5 +1,5 @@
 ---
-title: "Workshop3"
+title: "Workshop 3 Reproducing and Improving a Figure"
 author: "Rowwyn Lontayao"
 format:
   html:
